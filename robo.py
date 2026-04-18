@@ -248,39 +248,29 @@ class AVAAutomacao:
         self.fechar_modal()
         return True
 
-    # ═══════════════════════════════════════════════════════════════════
-    # PERGUNTA (CORRIGIDA COM BASE NO HTML FORNECIDO)
-    # ═══════════════════════════════════════════════════════════════════
     def resolver_pergunta(self):
         log("Tentando resolver pergunta...", C.C)
-        time.sleep(3) # Espera a animação do modal terminar
+        time.sleep(3)
 
         try:
-            # 1. Localiza a opção correta
             opcao = self.page.locator("input[type='radio'][value='correta']").first
             if opcao.count() == 0:
                 opcao = self.page.locator("input[type='radio']").first
 
             if opcao.count() > 0:
-                # .check(force=True) é melhor para radio buttons que ficam "escondidos" atrás de labels estilizados
                 opcao.check(force=True)
                 log("Opção selecionada.", C.V)
                 time.sleep(1)
 
-                # 2. Tenta clicar no botão de enviar
                 seletores_botao = ["#submit-poll", "button:has-text('Votar')", "button:has-text('Responder')"]
 
                 for sel in seletores_botao:
                     btn = self.page.locator(sel).first
                     if btn.count() > 0:
                         log(f"Botão de envio encontrado: {sel}", C.V)
-
-                        # O segredo está aqui: force=True ignora se houver algo na frente do botão
-                        # e clicamos via dispatch para garantir que o evento de formulário dispare
                         btn.click(force=True)
-
                         log("Botão clicado com sucesso.", C.V)
-                        time.sleep(5) # Aguarda processamento do servidor
+                        time.sleep(6)
                         self.fechar_modal()
                         return True
 
@@ -290,14 +280,12 @@ class AVAAutomacao:
 
         except Exception as e:
             log(f"Erro ao resolver pergunta: {e}", C.E)
-            # Se travar, tenta fechar o modal para não impedir o fluxo
             self.fechar_modal()
 
         return False
         log("Tentando resolver pergunta...", C.C)
         time.sleep(3)
 
-        # 1. Tenta selecionar a opção
         opcao = self.page.locator("input[type='radio'][value='correta']").first
         if opcao.count() == 0:
             opcao = self.page.locator("input[type='radio']").first
@@ -305,8 +293,6 @@ class AVAAutomacao:
         if opcao.count() > 0:
             opcao.evaluate("el => el.click()")
             time.sleep(1)
-
-            # 2. Tenta clicar no botão de enviar
             respondido = False
             seletores_botao = ["#submit-poll", "button:has-text('Votar')", "button:has-text('Responder')", ".submitbutton"]
 
@@ -314,12 +300,10 @@ class AVAAutomacao:
                 btn = self.page.locator(sel).first
                 if btn.count() > 0 and btn.is_visible():
                     log(f"Botão de envio encontrado: {sel}", C.V)
-                    btn.click() # Playwright click é mais confiável que evaluate para disparar eventos de form
+                    btn.click()
                     respondido = True
-                    time.sleep(5) # Tempo essencial para o AVA processar a resposta antes de fechar
+                    time.sleep(5)
                     break
-
-            # 3. Só fecha o modal se tiver respondido
             if respondido:
                 log("Pergunta respondida, fechando modal.", C.V)
                 self.fechar_modal()
@@ -335,11 +319,9 @@ class AVAAutomacao:
         log("Resolvendo diagnóstico...", C.M, "📝")
         time.sleep(4)
 
-        # Tenta clicar em "Verifique a conclusão"
         self.clicar_verificar_conclusao()
         time.sleep(3)
 
-        # --- CASO 1: Modal com iframe ---
         if self.page.locator(".modal-content iframe").count() > 0:
             log("Diagnóstico via modal com iframe", C.C)
             iframe = self.page.frame_locator(".modal-content iframe").first
@@ -494,9 +476,6 @@ class AVAAutomacao:
             return True
         return False
 
-    # ═══════════════════════════════════════════════════════════════════
-    # ASSISTIR VÍDEO
-    # ═══════════════════════════════════════════════════════════════════
     def assistir_video(self):
         inicio = time.time()
         ultimo_modal = ultimo_play = 0
