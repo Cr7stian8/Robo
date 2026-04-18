@@ -573,9 +573,6 @@ class AVAAutomacao:
 
         return videos_curso
 
-    # ═══════════════════════════════════════════════════════════════════
-    # LOOP INFINITO DE CURSOS
-    # ═══════════════════════════════════════════════════════════════════
     def executar_loop_infinito(self):
         log("\n🔄 LOOP INFINITO DE CURSOS 🔄", C.B, "🚀")
         while True:
