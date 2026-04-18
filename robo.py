@@ -1,11 +1,3 @@
-"""
-AVA-EFAPE AUTOMAÇÃO v2.8
-- Estrutura compacta v2.7
-- Funções de interação dos modais mantidas do original v2.6
-- Correção na seleção de alternativas em perguntas
-- Avanço baseado no índice lateral (bolinhas)
-"""
-
 from playwright.sync_api import sync_playwright
 import time
 from pathlib import Path
@@ -17,7 +9,7 @@ SENHA = "#Calabria7513"
 TEXTO_DIAGNOSTICO = "Turma participativa, Porém tem apresentado dificuldades no conceito abordado que precisam ser superados em sala de aula."
 TEXTO_PLANO_AULA = "Plano de aula elaborado com sucesso, contemplando os objetivos propostos."
 TEXTO_PESQUISA = "Conteúdo excelente, formador muito didático e planejamento bem estruturado!"
-TEMPO_MAXIMO_VIDEO = 980000
+TEMPO_MAXIMO_VIDEO = 300000
 TEMPO_MINIMO_VIDEO = 30
 DEBUG_DIR = Path("debug")
 DEBUG_DIR.mkdir(exist_ok=True)
@@ -131,14 +123,14 @@ class AVAAutomacao:
             time.sleep(1)
             return True
         except:
-            log("Aviso: índice lateral não encontrado", C.A)
+            log("Aviso: índice lateral não encontrado", C.A,"❌")
             return False
 
     def encontrar_proxima_aula_pendente(self):
         self.garantir_indice_lateral()
         itens = self.page.locator(".courseindex-item, .drawer .list-group-item").all()
         if not itens:
-            log("Nenhum item no índice. Recarregando...", C.A)
+            log("Nenhum item no índice. Recarregando...", C.A,"🎉")
             self.page.reload()
             time.sleep(2)
             self.page.wait_for_load_state("networkidle")
@@ -189,12 +181,10 @@ class AVAAutomacao:
         if self.page.locator(".modal-content:visible").count() > 0:
             return False
         if self.pesquisa_concluida:
-            print("Pesquisa concluída. Aguardando 10 segundos...")
-            for segundo in range(10, 0, -1):
-                # Sobrescreve a linha com o segundo atual
+            print("Pesquisa concluída. Aguardando 5 segundos...")
+            for segundo in range(5, 0, -1):
                 print(f"\rAguardando... {segundo} segundos restantes", end="")
                 time.sleep(1)
-            # Apaga a linha do contador (opcional, mas atende ao "suma")
             print("\r" + " " * 50 + "\r", end="")
             print("Tempo de espera concluído. Retornando True.")
             return True
@@ -621,7 +611,7 @@ class AVAAutomacao:
     def run(self):
         print(f"""
 {C.C}╔══════════════════════════════════════════════════════════════════╗
-║     🎮 AUTOMAÇÃO AVA-EFAPE v2.8                                  ║
+║     🎮 AUTOMAÇÃO AVA-EFAPE - PARA VOCÊ PODER TRABALHAR 🎮        ║
 ╚══════════════════════════════════════════════════════════════════╝{C.R}
         """)
         try:
