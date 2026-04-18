@@ -538,7 +538,7 @@ class AVAAutomacao:
     # PROCESSAR UM CURSO INTEIRO
     # ═══════════════════════════════════════════════════════════════════
     def processar_curso(self, link_curso, card_curso, curso_id):
-        log(f"\n{'═'*60}\nNOVO CURSO (ID: {curso_id})\n{'═'*60}", C.B, "📚")
+        log(f"NOVO CURSO (ID: {curso_id})", C.B, "📚")
         link_curso.evaluate("el => el.click()")
         self.page.wait_for_load_state("networkidle")
         time.sleep(5)
@@ -591,7 +591,7 @@ class AVAAutomacao:
         return videos_curso
 
     def executar_loop_infinito(self):
-        log("\n🔄 LOOP INFINITO DE CURSOS 🔄", C.B, "🚀")
+        # log("Vamos iniciar um loop para assistir seus vídeos", C.C, "🚀")
         while True:
             self.ir_para_meus_cursos()
             proximo_curso, card_curso, curso_id = self.encontrar_proximo_curso_pendente()
