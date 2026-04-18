@@ -45,9 +45,6 @@ class AVAAutomacao:
         self.aulas_tentadas = {}
         self.cursos_processados = set()
 
-    # ═══════════════════════════════════════════════════════════════════
-    # GERENCIAMENTO DO NAVEGADOR
-    # ═══════════════════════════════════════════════════════════════════
     def iniciar(self):
         log("Iniciando navegador...", C.C, "🌐")
         self.playwright = sync_playwright().start()
@@ -76,6 +73,7 @@ class AVAAutomacao:
             return False
 
     def ir_para_meus_cursos(self):
+        print("\n")
         log("Indo para Meus Cursos...", C.C, "📚")
         self.page.goto("https://avaefape.educacao.sp.gov.br/my/courses.php")
         self.page.wait_for_load_state("networkidle")
@@ -160,11 +158,6 @@ class AVAAutomacao:
         log("Nenhuma aula pendente neste curso!", C.V, "✅")
         return None, None
 
-    # ═══════════════════════════════════════════════════════════════════
-    # FUNÇÕES DE INTERAÇÃO DOS MODAIS (IDÊNTICAS AO CÓDIGO ORIGINAL V2.6)
-    # ═══════════════════════════════════════════════════════════════════
-
-    # ─────────────────────────────────────────────────────────────────
     def dar_play_video(self):
         if self.page.locator(".modal-content:visible").count() > 0:
             return False
@@ -502,10 +495,10 @@ class AVAAutomacao:
         time.sleep(2)
         self.dar_play_video()
 
+
         while time.time() - inicio < TEMPO_MAXIMO_VIDEO:
             m, s = divmod(int(time.time() - inicio), 60)
-            print(f"\r   ⏱️ {m:02d}:{s:02d} | Número de interações resolvidas:  {self.interacoes_resolvidas}", end="", flush=True)
-
+            print(f"⏱️ {m:02d}:{s:02d} | Número de interações resolvidas:  {self.interacoes_resolvidas}", end="", flush=True)
             modal = self.page.locator(".modal-content:visible").first
             if modal.count() > 0:
                 agora = time.time()
@@ -534,10 +527,8 @@ class AVAAutomacao:
         print()
         return True
 
-    # ═══════════════════════════════════════════════════════════════════
-    # PROCESSAR UM CURSO INTEIRO
-    # ═══════════════════════════════════════════════════════════════════
     def processar_curso(self, link_curso, card_curso, curso_id):
+        print("\n")
         log(f"NOVO CURSO (ID: {curso_id})", C.B, "📚")
         link_curso.evaluate("el => el.click()")
         self.page.wait_for_load_state("networkidle")
@@ -565,6 +556,7 @@ class AVAAutomacao:
             log(f"AULA {videos_curso+1} DO CURSO", C.C,"🎬")
             proxima_aula.evaluate("el => el.click()")
             self.page.wait_for_load_state("networkidle")
+            print("\n")
             time.sleep(5)
 
             self.page.reload()
