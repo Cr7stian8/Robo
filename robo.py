@@ -498,7 +498,7 @@ class AVAAutomacao:
 
         while time.time() - inicio < TEMPO_MAXIMO_VIDEO:
             m, s = divmod(int(time.time() - inicio), 60)
-            print(f"⏱️ {m:02d}:{s:02d} | Número de interações resolvidas:  {self.interacoes_resolvidas}", end="", flush=True)
+            print(f"\r ⏱️ {m:02d}:{s:02d} | Número de interações resolvidas:  {self.interacoes_resolvidas}", end="", flush=True)
             modal = self.page.locator(".modal-content:visible").first
             if modal.count() > 0:
                 agora = time.time()
@@ -556,8 +556,9 @@ class AVAAutomacao:
             log(f"AULA {videos_curso+1} DO CURSO", C.C,"🎬")
             proxima_aula.evaluate("el => el.click()")
             self.page.wait_for_load_state("networkidle")
-            print("\n")
             time.sleep(5)
+            print("\n")
+
 
             self.page.reload()
             time.sleep(5)
