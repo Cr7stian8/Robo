@@ -263,6 +263,48 @@ class AVAAutomacao:
     # ═══════════════════════════════════════════════════════════════════
     def resolver_pergunta(self):
         log("Tentando resolver pergunta...", C.C)
+        time.sleep(3) # Espera a animação do modal terminar
+
+        try:
+            # 1. Localiza a opção correta
+            opcao = self.page.locator("input[type='radio'][value='correta']").first
+            if opcao.count() == 0:
+                opcao = self.page.locator("input[type='radio']").first
+
+            if opcao.count() > 0:
+                # .check(force=True) é melhor para radio buttons que ficam "escondidos" atrás de labels estilizados
+                opcao.check(force=True)
+                log("Opção selecionada.", C.V)
+                time.sleep(1)
+
+                # 2. Tenta clicar no botão de enviar
+                seletores_botao = ["#submit-poll", "button:has-text('Votar')", "button:has-text('Responder')"]
+
+                for sel in seletores_botao:
+                    btn = self.page.locator(sel).first
+                    if btn.count() > 0:
+                        log(f"Botão de envio encontrado: {sel}", C.V)
+
+                        # O segredo está aqui: force=True ignora se houver algo na frente do botão
+                        # e clicamos via dispatch para garantir que o evento de formulário dispare
+                        btn.click(force=True)
+
+                        log("Botão clicado com sucesso.", C.V)
+                        time.sleep(5) # Aguarda processamento do servidor
+                        self.fechar_modal()
+                        return True
+
+                log("Botão de envio não encontrado após selecionar opção.", C.A)
+            else:
+                log("Nenhuma opção de rádio encontrada.", C.E)
+
+        except Exception as e:
+            log(f"Erro ao resolver pergunta: {e}", C.E)
+            # Se travar, tenta fechar o modal para não impedir o fluxo
+            self.fechar_modal()
+
+        return False
+        log("Tentando resolver pergunta...", C.C)
         time.sleep(3)
 
         # 1. Tenta selecionar a opção
