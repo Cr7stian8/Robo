@@ -470,6 +470,8 @@ class AVAAutomacao:
 
     def resolver_modal_atual(self):
         tipo = self.detectar_tipo_modal()
+
+        print("\n")
         log(f"Modal: {tipo.upper()}", C.A)
         handlers = {
             "popup": self.resolver_popup,
@@ -518,7 +520,7 @@ class AVAAutomacao:
                     ultimo_play = agora
 
             if self.verificar_video_acabou(inicio):
-                log("\nVídeo concluído. Avançando via índice...", C.V, "🏁")
+                log("Vídeo concluído. Avançando via índice...", C.V, "🏁")
                 self.page.reload()
                 time.sleep(2)
                 break
@@ -553,6 +555,7 @@ class AVAAutomacao:
                 self.aulas_tentadas[href_aula] = 1
                 aula_anterior = href_aula
 
+            print("\n")
             log(f"AULA {videos_curso+1} DO CURSO", C.C,"🎬")
             proxima_aula.evaluate("el => el.click()")
             self.page.wait_for_load_state("networkidle")
