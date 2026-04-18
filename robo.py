@@ -30,7 +30,7 @@ class C:
 def log(msg, cor=C.C, emoji="•"):
     print(f"{cor}[{datetime.now():%H:%M:%S}] {emoji} {msg}{C.R}")
 
-def save_debug(page, name):
+def save_debug(page, name): #Não salvo mais debug pois está funcionando
     if SALVAR_SCREENSHOTS:
         try: page.screenshot(path=DEBUG_DIR / f"{name}.png", full_page=True)
         except: pass
@@ -69,7 +69,6 @@ class AVAAutomacao:
             self.page.locator("button:has-text('Acessar')").click()
             self.page.wait_for_load_state("networkidle")
             time.sleep(5)
-            save_debug(self.page, "01_login")
             log("Login realizado", C.V, "✅")
             return True
         except Exception as e:
@@ -132,7 +131,7 @@ class AVAAutomacao:
             time.sleep(1)
             return True
         except:
-            log("Aviso: índice lateral não encontrado", C.A,"❌")
+            time.sleep(2)
             return False
 
     def encontrar_proxima_aula_pendente(self):
@@ -282,8 +281,17 @@ class AVAAutomacao:
                         time.sleep(6)
                         self.fechar_modal()
                         return True
+                    else:
+                        print("esse modal já está resolvido, vamos tentar fechar em 5 segundos...")
+                        for segundo in range(5, 0, -1):
+                            print(f"\rAguardando... {segundo} segundos restantes", end="")
+                            time.sleep(1)
+                            print("\r" + " " * 50 + "\r", end="")
 
-                log("Botão de envio não encontrado após selecionar opção.", C.A)
+                        print("Tempo de espera concluído. Retornando True.")
+                        self.fechar_modal()
+                        return True
+
             else:
                 log("Nenhuma opção de rádio encontrada.", C.E)
 
@@ -554,7 +562,7 @@ class AVAAutomacao:
                 self.aulas_tentadas[href_aula] = 1
                 aula_anterior = href_aula
 
-            log(f"\n{'─'*50}\n🎬 AULA {videos_curso+1} DO CURSO\n{'─'*50}", C.C)
+            log(f"AULA {videos_curso+1} DO CURSO", C.C,"🎬")
             proxima_aula.evaluate("el => el.click()")
             self.page.wait_for_load_state("networkidle")
             time.sleep(5)
@@ -608,7 +616,6 @@ class AVAAutomacao:
             log("\nInterrompido pelo usuário", C.A)
         except Exception as e:
             log(f"Erro: {e}", C.E)
-            save_debug(self.page, "erro_critico")
             import traceback
             traceback.print_exc()
         finally:
