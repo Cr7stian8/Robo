@@ -1,9 +1,9 @@
-#   Na próxima vou tentar
-#   ajustar o fluxo de modais
-#   se aparecer três vezes o mesmo modal significa que ele travou
+#   Me ajude a implementar o seguinte tratamento pois tenho certeza de que funcionará
+#   ajustar o fluxo de tentativa de resolver os modais
+#   se aparecer três vezes o mesmo modal em seguida significa que ele travou nesse modal
 #   ou identificou o tipo de modal errado
 #   Então ele começa um fluxo de tentar resolver como se fosse outro tipo de modal
-#   Se continuar repetindo três vezes ele tenta todos os tipos de modais e se voltar ao tipo inicial
+#   Se continuar repetindo três vezes ele tenta outro e assim em diante até tentar todos os tipos de modais e se voltar ao tipo inicial
 #   Tentar três vezes e não conseguir ele exibe uma mensagem pedindo para reiniciar o código
 #   Tira um print e salva na pasta debug
 
@@ -44,6 +44,11 @@ class AVAAutomacao:
         self.ultimo_modal_fechado = 0
         self.aulas_tentadas = {}
         self.cursos_processados = set()
+        self.modal_history = []
+        self.strategy_index = 0
+        self.attempts_with_current_strategy = 0
+        self.strategies = ["pergunta", "diagnostico", "reflexao", "plano", "pesquisa", "popup"]
+        self.modal_resolved_success = False
 
     def iniciar(self):
         log("Iniciando navegador...", C.C, "🌐")
@@ -187,7 +192,7 @@ class AVAAutomacao:
                 print(f"\rAguardando... {segundo} segundos restantes", end="")
                 time.sleep(1)
             print("\r" + " " * 50 + "\r", end="")
-            print("Tempo de espera concluído. Retornando True.")
+            print("Tempo de espera concluído. Deu certo!")
             return True
         try:
             current = self.page.locator("#currenttime").inner_text()
@@ -281,7 +286,7 @@ class AVAAutomacao:
                             time.sleep(1)
                             print("\r" + " " * 50 + "\r", end="")
 
-                        print("Tempo de espera concluído. Retornando True.")
+                        print("Tempo de espera concluído. Vamos para a próxima aula! pode descansar...")
                         self.fechar_modal()
                         return True
 
@@ -469,10 +474,39 @@ class AVAAutomacao:
         return "popup"
 
     def resolver_modal_atual(self):
-        tipo = self.detectar_tipo_modal()
+        tipo_detectado = self.detectar_tipo_modal()
+        agora = time.time()
+
+        self.modal_history.append(tipo_detectado)
+        if len(self.modal_history) > 3:
+            self.modal_history.pop(0)
+
+        if len(self.modal_history) == 3 and len(set(self.modal_history)) == 1:
+            log(f"Modal '{tipo_detectado}' travou 3 vezes seguidas!", C.E, "🔄")
+            self.attempts_with_current_strategy += 1
+
+            if self.attempts_with_current_strategy >= 3:
+                self.strategy_index = (self.strategy_index + 1) % len(self.strategies)
+                self.attempts_with_current_strategy = 0
+                log(f"Mudando para estratégia alternativa: {self.strategies[self.strategy_index]}", C.A, "🔀")
+
+                if self.strategy_index == 0:
+                    log("⚠️ TODAS AS ESTRATÉGIAS FALHARAM! ⚠️", C.E, "❌")
+                    save_debug(self.page, f"modal_falha_total_{datetime.now():%Y%m%d_%H%M%S}")
+                    input("Pressione Enter após reiniciar manualmente...")
+                    return False
+
+            self.modal_history.clear()
+            tipo_alvo = self.strategies[self.strategy_index]
+        else:
+
+            tipo_alvo = tipo_detectado
+            if len(self.modal_history) >= 2 and self.modal_history[-1] != self.modal_history[-2]:
+                self.attempts_with_current_strategy = 0
 
         print("\n")
-        log(f"Modal: {tipo.upper()}", C.A)
+        log(f"Resolvendo como: {tipo_alvo.upper()}", C.A, "🎯")
+
         handlers = {
             "popup": self.resolver_popup,
             "pergunta": self.resolver_pergunta,
@@ -481,11 +515,21 @@ class AVAAutomacao:
             "plano": self.resolver_plano_aula,
             "pesquisa": self.resolver_pesquisa,
         }
-        handler = handlers.get(tipo, self.resolver_popup)
-        if handler():
+
+        handler = handlers.get(tipo_alvo, self.resolver_popup)
+        sucesso = handler()
+
+        if sucesso:
             self.interacoes_resolvidas += 1
             log(f"Interação #{self.interacoes_resolvidas} resolvida", C.V, "✨")
+            self.modal_history.clear()
+            self.strategy_index = 0
+            self.attempts_with_current_strategy = 0
             return True
+
+        if tipo_alvo != tipo_detectado:
+            self.attempts_with_current_strategy += 1
+
         return False
 
     def assistir_video(self):
