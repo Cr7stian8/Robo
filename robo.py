@@ -630,16 +630,60 @@ class AVAAutomacao:
 
         return videos_curso
 
+    def reiniciar_tudo(self):
+        log("Iniciando reinicialização completa do sistema...", C.A, "🔄")
+
+        try:
+            self.fechar()
+        except Exception as e:
+            log(f"Aviso ao fechar navegador: {e}", C.A, "⚠️")
+
+        self.modal_history = []
+        self.strategy_index = 0
+        self.attempts_with_current_strategy = 0
+        self.modal_resolved_success = False
+        self.modal_fechado_recentemente = False
+
+        time.sleep(2)
+
+        self.iniciar()
+        log("Tentando restabelecer sessão...", C.C, "🔐")
+
+        if not self.login():
+            log("Falha crítica ao relogar durante o reinício!", C.E, "❌")
+            raise Exception("FatalLoginError")
+
+        log("Sistema reiniciado e pronto para continuar!", C.V, "✨")
+
     def executar_loop_infinito(self):
-        # log("Vamos iniciar um loop para assistir seus vídeos", C.C, "🚀")
+        log("Vamos iniciar um loop para assistir seus vídeos", C.C, "🚀")
+
         while True:
-            self.ir_para_meus_cursos()
-            proximo_curso, card_curso, curso_id = self.encontrar_proximo_curso_pendente()
-            if not proximo_curso:
-                log("\n🌟 TODOS OS CURSOS CONCLUÍDOS! 🌟", C.V, "🎉")
-                break
-            self.processar_curso(proximo_curso, card_curso, curso_id)
-            time.sleep(3)
+            try:
+                # Garante que o robô comece na página correta
+                self.ir_para_meus_cursos()
+
+                # Sub-loop para processar os cursos
+                while True:
+                    proximo_curso, card_curso, curso_id = self.encontrar_proximo_curso_pendente()
+
+                    if not proximo_curso:
+                        log("\n🌟 TODOS OS CURSOS CONCLUÍDOS! 🌟", C.V, "🎉")
+                        return # Encerra o script de vez
+
+                    self.processar_curso(proximo_curso, card_curso, curso_id)
+                    time.sleep(3)
+
+            except Exception as e:
+                if "RestartBrowser" in str(e):
+                    # Se for o nosso erro programado de reinício
+                    self.reiniciar_tudo()
+                    # O loop 'while True' externo vai recomeçar do 'self.ir_para_meus_cursos()'
+                else:
+                    # Se for um erro real do Python/Playwright que não previmos
+                    log(f"Erro fatal não tratado: {e}", C.E, "☢️")
+                    self.fechar()
+                    break
 
     def run(self):
         print(f"""
