@@ -44,10 +44,6 @@ class AVAAutomacao:
         self.ultimo_modal_fechado = 0
         self.aulas_tentadas = {}
         self.cursos_processados = set()
-        self.modal_history = []
-        self.strategy_index = 0
-        self.attempts_with_current_strategy = 0
-        self.strategies = ["pergunta", "diagnostico", "reflexao", "plano", "pesquisa", "popup"]
         self.modal_resolved_success = False
 
     def iniciar(self):
@@ -473,40 +469,26 @@ class AVAAutomacao:
             return "pergunta"
         return "popup"
 
-    def resolver_modal_atual(self):
-        tipo_detectado = self.detectar_tipo_modal()
-        agora = time.time()
+    def handle_modal(self):
+        """Gerencia modal travado com troca progressiva de estratégias."""
+        # Estratégias ordenadas (a primeira é a detecção automática)
+        ESTRATEGIAS = ["auto", "pergunta", "diagnostico", "reflexao", "plano", "pesquisa", "popup"]
 
-        self.modal_history.append(tipo_detectado)
-        if len(self.modal_history) > 3:
-            self.modal_history.pop(0)
+        # Estado da máquina (inicializa se não existir)
+        if not hasattr(self, 'stuck_strategy_idx'):
+            self.stuck_strategy_idx = 0
+            self.stuck_fail_count = 0
 
-        if len(self.modal_history) == 3 and len(set(self.modal_history)) == 1:
-            log(f"Modal '{tipo_detectado}' travou 3 vezes seguidas!", C.E, "🔄")
-            self.attempts_with_current_strategy += 1
+        strategy = ESTRATEGIAS[self.stuck_strategy_idx]
+        log(f"Estratégia atual: {strategy.upper()}", C.A, "🎯")
 
-            if self.attempts_with_current_strategy >= 3:
-                self.strategy_index = (self.strategy_index + 1) % len(self.strategies)
-                self.attempts_with_current_strategy = 0
-                log(f"Mudando para estratégia alternativa: {self.strategies[self.strategy_index]}", C.A, "🔀")
-
-                if self.strategy_index == 0:
-                    log("⚠️ TODAS AS ESTRATÉGIAS FALHARAM! ⚠️", C.E, "❌")
-                    save_debug(self.page, f"modal_falha_total_{datetime.now():%Y%m%d_%H%M%S}")
-                    input("Pressione Enter após reiniciar manualmente...")
-                    return False
-
-            self.modal_history.clear()
-            tipo_alvo = self.strategies[self.strategy_index]
+        # Escolhe o tipo alvo: se for 'auto', usa a detecção real
+        if strategy == "auto":
+            tipo_alvo = self.detectar_tipo_modal()
         else:
+            tipo_alvo = strategy
 
-            tipo_alvo = tipo_detectado
-            if len(self.modal_history) >= 2 and self.modal_history[-1] != self.modal_history[-2]:
-                self.attempts_with_current_strategy = 0
-
-        print("\n")
-        log(f"Resolvendo como: {tipo_alvo.upper()}", C.A, "🎯")
-
+        # Executa o handler correspondente
         handlers = {
             "popup": self.resolver_popup,
             "pergunta": self.resolver_pergunta,
@@ -515,63 +497,82 @@ class AVAAutomacao:
             "plano": self.resolver_plano_aula,
             "pesquisa": self.resolver_pesquisa,
         }
-
         handler = handlers.get(tipo_alvo, self.resolver_popup)
         sucesso = handler()
 
-        if sucesso:
+        # Aguarda um instante e verifica se o modal ainda está visível
+        time.sleep(2)
+        modal_ainda_visivel = self.page.locator(".modal-content:visible").count() > 0
+
+        if not modal_ainda_visivel:
+            # Sucesso! Reseta tudo e retorna
+            self.stuck_strategy_idx = 0
+            self.stuck_fail_count = 0
             self.interacoes_resolvidas += 1
             log(f"Interação #{self.interacoes_resolvidas} resolvida", C.V, "✨")
-            self.modal_history.clear()
-            self.strategy_index = 0
-            self.attempts_with_current_strategy = 0
             return True
 
-        if tipo_alvo != tipo_detectado:
-            self.attempts_with_current_strategy += 1
+        # Falha: incrementa contador
+        self.stuck_fail_count += 1
+        log(f"Falha {self.stuck_fail_count}/3 com estratégia {strategy}", C.E, "❌")
+
+        if self.stuck_fail_count >= 3:
+            # Troca de estratégia
+            self.stuck_strategy_idx = (self.stuck_strategy_idx + 1) % len(ESTRATEGIAS)
+            self.stuck_fail_count = 0
+
+            # Se voltou ao início (auto) significa que todas falharam
+            if self.stuck_strategy_idx == 0:
+                log("TODAS AS ESTRATÉGIAS FALHARAM!", C.E, "☢️")
+                save_debug(self.page, f"modal_falha_total_{datetime.now():%Y%m%d_%H%M%S}")
+                print("\n🚫 O robô não conseguiu fechar o modal mesmo após tentar todos os métodos.")
+                print("👉 Por favor, feche o modal manualmente e reinicie este script.\n")
+                input("Pressione Enter após reiniciar...")
+                # Levanta exceção para que o loop externo possa reiniciar o navegador
+                raise Exception("RestartBrowser")
+            else:
+                log(f"Nova estratégia: {ESTRATEGIAS[self.stuck_strategy_idx]}", C.A, "🔀")
 
         return False
 
-    def assistir_video(self):
-        inicio = time.time()
-        ultimo_modal = ultimo_play = 0
-        self.pesquisa_concluida = False
-        self.modal_fechado_recentemente = False
+def assistir_video(self):
+    inicio = time.time()
+    self.pesquisa_concluida = False
+    self.modal_fechado_recentemente = False
 
-        time.sleep(2)
-        self.dar_play_video()
+    time.sleep(2)
+    self.dar_play_video()
 
+    while time.time() - inicio < TEMPO_MAXIMO_VIDEO:
+        m, s = divmod(int(time.time() - inicio), 60)
+        print(f"\r ⏱️ {m:02d}:{s:02d} | Resolvidas: {self.interacoes_resolvidas}", end="", flush=True)
 
-        while time.time() - inicio < TEMPO_MAXIMO_VIDEO:
-            m, s = divmod(int(time.time() - inicio), 60)
-            print(f"\r ⏱️ {m:02d}:{s:02d} | Número de interações resolvidas:  {self.interacoes_resolvidas}", end="", flush=True)
-            modal = self.page.locator(".modal-content:visible").first
-            if modal.count() > 0:
-                agora = time.time()
-                if self.modal_fechado_recentemente and (agora - self.ultimo_modal_fechado) < 3:
-                    time.sleep(1)
-                    continue
-                self.modal_fechado_recentemente = False
-                if agora - ultimo_modal > 3:
-                    print()
-                    self.resolver_modal_atual()
-                    ultimo_modal = agora
-                    ultimo_play = 0
-            else:
-                agora = time.time()
-                if agora - ultimo_play > 5:
-                    self.dar_play_video()
-                    ultimo_play = agora
+        modal = self.page.locator(".modal-content:visible").first
+        if modal.count() > 0:
+            agora = time.time()
+            # Evita nova tentativa imediatamente após fechar um modal
+            if self.modal_fechado_recentemente and (agora - self.ultimo_modal_fechado) < 3:
+                time.sleep(1)
+                continue
 
-            if self.verificar_video_acabou(inicio):
-                log("Vídeo concluído. Avançando via índice...", C.V, "🏁")
-                self.page.reload()
-                time.sleep(2)
-                break
-            time.sleep(1)
+            self.modal_fechado_recentemente = False
+            print()  # quebra a linha do timer
+            self.handle_modal()          # <--- NOVA CHAMADA
+            self.dar_play_video()
+        else:
+            # Se não há modal, mantém o vídeo rodando
+            self.dar_play_video()
 
-        print()
-        return True
+        if self.verificar_video_acabou(inicio):
+            log("Vídeo concluído. Avançando via índice...", C.V, "🏁")
+            self.page.reload()
+            time.sleep(2)
+            break
+
+        time.sleep(1)
+
+    print()
+    return True
 
     def processar_curso(self, link_curso, card_curso, curso_id):
         print("\n")

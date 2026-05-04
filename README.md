@@ -14,7 +14,6 @@ Antes de rodar o projeto, você precisa ter instalado:
 * Python
 * `pip` (gerenciador de pacotes do Python)
 
-
 ## ⚙️ Instalação
 
 ### 1. Clone ou baixe o projeto
