@@ -535,44 +535,44 @@ class AVAAutomacao:
 
         return False
 
-def assistir_video(self):
-    inicio = time.time()
-    self.pesquisa_concluida = False
-    self.modal_fechado_recentemente = False
+    def assistir_video(self):
+        inicio = time.time()
+        self.pesquisa_concluida = False
+        self.modal_fechado_recentemente = False
 
-    time.sleep(2)
-    self.dar_play_video()
+        time.sleep(2)
+        self.dar_play_video()
 
-    while time.time() - inicio < TEMPO_MAXIMO_VIDEO:
-        m, s = divmod(int(time.time() - inicio), 60)
-        print(f"\r ⏱️ {m:02d}:{s:02d} | Resolvidas: {self.interacoes_resolvidas}", end="", flush=True)
+        while time.time() - inicio < TEMPO_MAXIMO_VIDEO:
+            m, s = divmod(int(time.time() - inicio), 60)
+            print(f"\r ⏱️ {m:02d}:{s:02d} | Resolvidas: {self.interacoes_resolvidas}", end="", flush=True)
 
-        modal = self.page.locator(".modal-content:visible").first
-        if modal.count() > 0:
-            agora = time.time()
-            # Evita nova tentativa imediatamente após fechar um modal
-            if self.modal_fechado_recentemente and (agora - self.ultimo_modal_fechado) < 3:
-                time.sleep(1)
-                continue
+            modal = self.page.locator(".modal-content:visible").first
+            if modal.count() > 0:
+                agora = time.time()
+                # Evita nova tentativa imediatamente após fechar um modal
+                if self.modal_fechado_recentemente and (agora - self.ultimo_modal_fechado) < 3:
+                    time.sleep(1)
+                    continue
 
-            self.modal_fechado_recentemente = False
-            print()  # quebra a linha do timer
-            self.handle_modal()          # <--- NOVA CHAMADA
-            self.dar_play_video()
-        else:
-            # Se não há modal, mantém o vídeo rodando
-            self.dar_play_video()
+                self.modal_fechado_recentemente = False
+                print()  # quebra a linha do timer
+                self.handle_modal()          # <--- NOVA CHAMADA
+                self.dar_play_video()
+            else:
+                # Se não há modal, mantém o vídeo rodando
+                self.dar_play_video()
 
-        if self.verificar_video_acabou(inicio):
-            log("Vídeo concluído. Avançando via índice...", C.V, "🏁")
-            self.page.reload()
-            time.sleep(2)
-            break
+            if self.verificar_video_acabou(inicio):
+                log("Vídeo concluído. Avançando via índice...", C.V, "🏁")
+                self.page.reload()
+                time.sleep(2)
+                break
 
-        time.sleep(1)
+            time.sleep(1)
 
-    print()
-    return True
+        print()
+        return True
 
     def processar_curso(self, link_curso, card_curso, curso_id):
         print("\n")
