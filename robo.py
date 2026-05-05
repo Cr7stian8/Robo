@@ -472,7 +472,7 @@ class AVAAutomacao:
     def handle_modal(self):
         """Gerencia modal travado com troca progressiva de estratégias."""
         # Estratégias ordenadas (a primeira é a detecção automática)
-        ESTRATEGIAS = ["auto", "pergunta", "diagnostico", "reflexao", "plano", "pesquisa", "popup"]
+        ESTRATEGIAS = ["auto", "pergunta", "diagnostico", "pesquisa", "reflexao", "plano",  "popup"]
 
         # Estado da máquina (inicializa se não existir)
         if not hasattr(self, 'stuck_strategy_idx'):
@@ -514,9 +514,9 @@ class AVAAutomacao:
 
         # Falha: incrementa contador
         self.stuck_fail_count += 1
-        log(f"Falha {self.stuck_fail_count}/3 com estratégia {strategy}", C.E, "❌")
+        log(f"Falha {self.stuck_fail_count}/2 com estratégia {strategy}", C.E, "❌")
 
-        if self.stuck_fail_count >= 3:
+        if self.stuck_fail_count >= 2:
             # Troca de estratégia
             self.stuck_strategy_idx = (self.stuck_strategy_idx + 1) % len(ESTRATEGIAS)
             self.stuck_fail_count = 0
