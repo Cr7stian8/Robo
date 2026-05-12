@@ -228,7 +228,7 @@ class AVAAutomacao:
         btn = self.page.locator("#refresh, button[title='Atualizar']").first
         if btn.count() > 0:
             btn.evaluate("el => el.click()")
-            time.sleep(3)
+            time.sleep(4)
             return True
         return False
 
@@ -236,23 +236,23 @@ class AVAAutomacao:
         btn = self.page.locator("button:has-text('Verifique a conclusão')").first
         if btn.count() > 0:
             btn.evaluate("el => el.click()")
-            time.sleep(3)
+            time.sleep(4)
             return True
         return False
 
     def resolver_popup(self):
-        time.sleep(2)
+        time.sleep(4)
         self.fechar_modal()
         return True
 
     def resolver_reflexao(self):
-        time.sleep(2)
+        time.sleep(4)
         self.fechar_modal()
         return True
 
     def resolver_pergunta(self):
         log("Tentando resolver pergunta...", C.C)
-        time.sleep(3)
+        time.sleep(4)
 
         try:
             opcao = self.page.locator("input[type='radio'][value='correta']").first
@@ -291,6 +291,7 @@ class AVAAutomacao:
 
         except Exception as e:
             log(f"Erro ao resolver pergunta: {e}", C.E)
+            time.sleep(3)
             self.fechar_modal()
 
         return False
@@ -364,6 +365,7 @@ class AVAAutomacao:
                         salvar.click()
                         time.sleep(5)
                         break
+            time.sleep(5)
             self.fechar_modal()
             return True
 
@@ -405,6 +407,7 @@ class AVAAutomacao:
     def resolver_plano_aula(self):
         time.sleep(3)
         self.clicar_atualizar()
+        time.sleep(3)
         self.clicar_verificar_conclusao()
         time.sleep(3)
         iframe = self.page.frame_locator(".modal-content iframe").first
@@ -429,11 +432,12 @@ class AVAAutomacao:
                     salvar.evaluate("el => el.click()")
                     time.sleep(5)
                     break
+        time.sleep(5)
         self.fechar_modal()
         return True
 
     def resolver_pesquisa(self):
-        time.sleep(4)
+        time.sleep(5)
         for name in ['field-1768916198', 'field-1768916273', 'field-1768916309', 'field-1769799109']:
             ops = self.page.locator(f"input[name='{name}']").all()
             if ops:
@@ -446,6 +450,7 @@ class AVAAutomacao:
         if btn.count() > 0:
             btn.evaluate("el => el.click()")
             time.sleep(5)
+        time.sleep(5)
         self.fechar_modal()
         time.sleep(10)
         self.pesquisa_concluida = True
@@ -470,8 +475,6 @@ class AVAAutomacao:
         return "popup"
 
     def handle_modal(self):
-        """Gerencia modal travado com troca progressiva de estratégias."""
-        # Estratégias ordenadas (a primeira é a detecção automática)
         ESTRATEGIAS = ["auto", "pergunta", "diagnostico", "pesquisa", "reflexao", "plano",  "popup"]
 
         # Estado da máquina (inicializa se não existir)
@@ -501,7 +504,7 @@ class AVAAutomacao:
         sucesso = handler()
 
         # Aguarda um instante e verifica se o modal ainda está visível
-        time.sleep(2)
+        time.sleep(5)
         modal_ainda_visivel = self.page.locator(".modal-content:visible").count() > 0
 
         if not modal_ainda_visivel:
@@ -526,8 +529,8 @@ class AVAAutomacao:
                 log("TODAS AS ESTRATÉGIAS FALHARAM!", C.E, "☢️")
                 save_debug(self.page, f"modal_falha_total_{datetime.now():%Y%m%d_%H%M%S}")
                 print("\n🚫 O robô não conseguiu fechar o modal mesmo após tentar todos os métodos.")
-                print("👉 Por favor, feche o modal manualmente e reinicie este script.\n")
-                input("Pressione Enter após reiniciar...")
+                print("👉 Vou reiniciar essa badarosca e começar outra vez, relaxa.\n")
+                time.sleep(4)
                 # Levanta exceção para que o loop externo possa reiniciar o navegador
                 raise Exception("RestartBrowser")
             else:
@@ -556,11 +559,10 @@ class AVAAutomacao:
                     continue
 
                 self.modal_fechado_recentemente = False
-                print()  # quebra a linha do timer
-                self.handle_modal()          # <--- NOVA CHAMADA
+                print()
+                self.handle_modal()
                 self.dar_play_video()
             else:
-                # Se não há modal, mantém o vídeo rodando
                 self.dar_play_video()
 
             if self.verificar_video_acabou(inicio):
