@@ -11,6 +11,7 @@ from playwright.sync_api import sync_playwright
 import time
 from pathlib import Path
 from datetime import datetime
+import os
 
 # CONFIGURAÇÕES
 CPF = "47821023809"
@@ -46,6 +47,9 @@ class AVAAutomacao:
         self.cursos_processados = set()
         self.modal_resolved_success = False
 
+    def limpar_console(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+
     def iniciar(self):
         log("Iniciando navegador...", C.C, "🌐")
         self.playwright = sync_playwright().start()
@@ -74,7 +78,6 @@ class AVAAutomacao:
             return False
 
     def ir_para_meus_cursos(self):
-        print("\n")
         log("Indo para Meus Cursos...", C.C, "📚")
         self.page.goto("https://avaefape.educacao.sp.gov.br/my/courses.php")
         self.page.wait_for_load_state("networkidle")
@@ -160,6 +163,7 @@ class AVAAutomacao:
         return None, None
 
     def dar_play_video(self):
+        time.sleep(4)
         if self.page.locator(".modal-content:visible").count() > 0:
             return False
         try:
@@ -201,6 +205,7 @@ class AVAAutomacao:
         return False
 
     def fechar_modal(self):
+        time.sleep(4)
         seletores = [
             "button[id^='close-']",
             ".interaction-dismiss",
@@ -225,6 +230,7 @@ class AVAAutomacao:
         return True
 
     def clicar_atualizar(self):
+        time.sleep(4)
         btn = self.page.locator("#refresh, button[title='Atualizar']").first
         if btn.count() > 0:
             btn.evaluate("el => el.click()")
@@ -233,6 +239,7 @@ class AVAAutomacao:
         return False
 
     def clicar_verificar_conclusao(self):
+        time.sleep(4)
         btn = self.page.locator("button:has-text('Verifique a conclusão')").first
         if btn.count() > 0:
             btn.evaluate("el => el.click()")
@@ -241,11 +248,13 @@ class AVAAutomacao:
         return False
 
     def resolver_popup(self):
+        log("Tentando resolver popup...", C.C)
         time.sleep(4)
         self.fechar_modal()
         return True
 
     def resolver_reflexao(self):
+        log("Tentando resolver reflexao...", C.C)
         time.sleep(4)
         self.fechar_modal()
         return True
@@ -458,7 +467,7 @@ class AVAAutomacao:
 
     def detectar_tipo_modal(self):
         try:
-            time.sleep(5)
+            time.sleep(3)
             texto = self.page.locator(".modal-content").inner_text().lower()
         except:
             texto = ""
@@ -504,7 +513,7 @@ class AVAAutomacao:
         sucesso = handler()
 
         # Aguarda um instante e verifica se o modal ainda está visível
-        time.sleep(5)
+        time.sleep(3)
         modal_ainda_visivel = self.page.locator(".modal-content:visible").count() > 0
 
         if not modal_ainda_visivel:
@@ -512,12 +521,12 @@ class AVAAutomacao:
             self.stuck_strategy_idx = 0
             self.stuck_fail_count = 0
             self.interacoes_resolvidas += 1
+            print("\n")
             log(f"Interação #{self.interacoes_resolvidas} resolvida", C.V, "✨")
             return True
 
         # Falha: incrementa contador
         self.stuck_fail_count += 1
-        log(f"Falha {self.stuck_fail_count}/2 com estratégia {strategy}", C.E, "❌")
 
         if self.stuck_fail_count >= 2:
             # Troca de estratégia
@@ -530,8 +539,7 @@ class AVAAutomacao:
                 save_debug(self.page, f"modal_falha_total_{datetime.now():%Y%m%d_%H%M%S}")
                 print("\n🚫 O robô não conseguiu fechar o modal mesmo após tentar todos os métodos.")
                 print("👉 Vou reiniciar essa badarosca e começar outra vez, relaxa.\n")
-                time.sleep(4)
-                # Levanta exceção para que o loop externo possa reiniciar o navegador
+                time.sleep(2)
                 raise Exception("RestartBrowser")
             else:
                 log(f"Nova estratégia: {ESTRATEGIAS[self.stuck_strategy_idx]}", C.A, "🔀")
@@ -577,7 +585,9 @@ class AVAAutomacao:
         return True
 
     def processar_curso(self, link_curso, card_curso, curso_id):
-        print("\n")
+        time.sleep(5)
+        self.limpar_console()
+        self.menu()
         log(f"NOVO CURSO (ID: {curso_id})", C.B, "📚")
         link_curso.evaluate("el => el.click()")
         self.page.wait_for_load_state("networkidle")
@@ -659,8 +669,10 @@ class AVAAutomacao:
         log("Sistema reiniciado e pronto para continuar!", C.V, "✨")
 
     def executar_loop_infinito(self):
+        time.sleep(5)
+        self.limpar_console()
+        self.menu()
         log("Vamos iniciar um loop para assistir seus vídeos", C.C, "🚀")
-
         while True:
             try:
                 # Garante que o robô comece na página correta
@@ -688,13 +700,16 @@ class AVAAutomacao:
                     self.fechar()
                     break
 
-    def run(self):
+    def menu(self):
         print(f"""
 {C.C}╔══════════════════════════════════════════════════════════════════╗
 ║     🎮 AUTOMAÇÃO AVA-EFAPE - PARA VOCÊ PODER TRABALHAR 🎮        ║
 ╚══════════════════════════════════════════════════════════════════╝{C.R}
         """)
+
+    def run(self):
         try:
+            self.menu()
             self.iniciar()
             if not self.login():
                 return
