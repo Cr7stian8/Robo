@@ -285,13 +285,7 @@ class AVAAutomacao:
                         self.fechar_modal()
                         return True
                     else:
-                        print("esse modal já está resolvido, vamos tentar fechar em 5 segundos...")
-                        for segundo in range(5, 0, -1):
-                            print(f"\rAguardando... {segundo} segundos restantes", end="")
-                            time.sleep(1)
-                            print("\r" + " " * 50 + "\r", end="")
-
-                        print("Tempo de espera concluído. Vamos para a próxima aula! pode descansar...")
+                        time.sleep(5)
                         self.fechar_modal()
                         return True
 
