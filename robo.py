@@ -445,7 +445,7 @@ class AVAAutomacao:
             ops = self.page.locator(f"input[name='{name}']").all()
             if ops:
                 ops[-1].evaluate("el => el.click()")
-                time.sleep(0.3)
+                time.sleep(2)
         txt = self.page.locator("textarea[name='field-1768584459']").first
         if txt.count() > 0:
             txt.fill(TEXTO_PESQUISA)
@@ -522,7 +522,7 @@ class AVAAutomacao:
         # Falha: incrementa contador
         self.stuck_fail_count += 1
 
-        if self.stuck_fail_count >= 2:
+        if self.stuck_fail_count >= 4:
             # Troca de estratégia
             self.stuck_strategy_idx = (self.stuck_strategy_idx + 1) % len(ESTRATEGIAS)
             self.stuck_fail_count = 0
