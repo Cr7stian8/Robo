@@ -441,18 +441,56 @@ class AVAAutomacao:
 
     def resolver_pesquisa(self):
         time.sleep(5)
-        for name in ['field-1768916198', 'field-1768916273', 'field-1768916309', 'field-1769799109']:
-            ops = self.page.locator(f"input[name='{name}']").all()
-            if ops:
-                ops[-1].evaluate("el => el.click()")
-                time.sleep(2)
+
+        # 1. Nomes dos grupos de radio já conhecidos (versão antiga + versão atual)
+        nomes_conhecidos = {
+            # Antigos (podem continuar aparecendo)
+            'field-1768916198',
+            'field-1768916273',
+            'field-1768916309',
+            'field-1769799109',
+            # Novos (adicionados na reformulação)
+            'field-1778253076',
+            'field-1778253089',
+            'field-1778253101',
+            'field-1778253117',
+        }
+
+        # 2. Descoberta dinâmica: encontra todos os inputs radio cujo nome começa com 'field-'
+        #    (exceto o textarea, que também tem prefixo 'field-' mas é de outro tipo)
+        todos_radios = self.page.locator(
+            "input[type='radio'][name^='field-']:not([name='field-1768584459'])"
+        ).all()
+
+        # Extrai os nomes reais que estão na página neste momento
+        nomes_dinamicos = set()
+        for radio in todos_radios:
+            nome = radio.get_attribute("name")
+            if nome:
+                nomes_dinamicos.add(nome)
+
+        # 3. Une as duas fontes — assim cobrimos todos os cenários
+        todos_os_nomes = nomes_conhecidos | nomes_dinamicos
+
+        # 4. Para cada nome único (sem repetir), marca a última opção (nota 10)
+        for nome in todos_os_nomes:
+            opcoes = self.page.locator(f"input[name='{nome}']").all()
+            if opcoes:
+                # Clica no último radio (valor máximo, que é 10)
+                opcoes[-1].evaluate("el => el.click()")
+                time.sleep(1)   # pequeno intervalo entre cliques
+
+        # 5. Preenche o campo de sugestões (opcional, mas sempre presente)
         txt = self.page.locator("textarea[name='field-1768584459']").first
         if txt.count() > 0:
             txt.fill(TEXTO_PESQUISA)
+
+        # 6. Envia o formulário
         btn = self.page.locator("#submitform-submit, button:has-text('Enviar')").first
         if btn.count() > 0:
             btn.evaluate("el => el.click()")
             time.sleep(5)
+
         time.sleep(5)
         self.fechar_modal()
         time.sleep(10)
