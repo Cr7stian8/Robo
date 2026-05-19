@@ -187,12 +187,7 @@ class AVAAutomacao:
         if self.page.locator(".modal-content:visible").count() > 0:
             return False
         if self.pesquisa_concluida:
-            print("Pesquisa concluída. Aguardando 5 segundos...")
-            for segundo in range(5, 0, -1):
-                print(f"\rAguardando... {segundo} segundos restantes", end="")
-                time.sleep(1)
-            print("\r" + " " * 50 + "\r", end="")
-            print("Tempo de espera concluído. Deu certo!")
+            time.sleep(5)
             return True
         try:
             current = self.page.locator("#currenttime").inner_text()
