@@ -1,12 +1,3 @@
-#   Me ajude a implementar o seguinte tratamento pois tenho certeza de que funcionará
-#   ajustar o fluxo de tentativa de resolver os modais
-#   se aparecer três vezes o mesmo modal em seguida significa que ele travou nesse modal
-#   ou identificou o tipo de modal errado
-#   Então ele começa um fluxo de tentar resolver como se fosse outro tipo de modal
-#   Se continuar repetindo três vezes ele tenta outro e assim em diante até tentar todos os tipos de modais e se voltar ao tipo inicial
-#   Tentar três vezes e não conseguir ele exibe uma mensagem pedindo para reiniciar o código
-#   Tira um print e salva na pasta debug
-
 from playwright.sync_api import sync_playwright
 import time
 from pathlib import Path
