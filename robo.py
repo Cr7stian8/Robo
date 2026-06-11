@@ -249,6 +249,34 @@ class AVAAutomacao:
         log("Tentando resolver pergunta...", C.C)
         time.sleep(4)
 
+        # --- Pergunta dentro de iframe ---
+        if self.page.locator(".modal-content iframe").count() > 0:
+            iframe = self.page.frame_locator(".modal-content iframe").first
+            opcao = iframe.locator("input[type='radio'][value='correta']").first
+            if opcao.count() == 0:
+                opcao = iframe.locator("input[type='radio']").first
+
+            if opcao.count() > 0:
+                opcao.check(force=True)
+                log("Opção selecionada.", C.V)
+                time.sleep(1)
+
+                btn = iframe.locator("#submit-poll, button:has-text('Votar'), button:has-text('Responder')").first
+                if btn.count() > 0:
+                    log("Botão de envio encontrado.", C.V)
+                    btn.click(force=True)
+                    time.sleep(6)
+                else:
+                    log("Botão de envio não encontrado, forçando fechamento.", C.A)
+                    time.sleep(5)
+                self.fechar_modal()
+                return True
+            else:
+                log("Nenhuma opção de rádio encontrada no iframe.", C.E)
+                self.fechar_modal()
+                return False
+
+        # --- Pergunta na página principal (sem iframe) ---
         try:
             opcao = self.page.locator("input[type='radio'][value='correta']").first
             if opcao.count() == 0:
@@ -264,7 +292,7 @@ class AVAAutomacao:
                 for sel in seletores_botao:
                     btn = self.page.locator(sel).first
                     if btn.count() > 0:
-                        log(f"Botão de envio encontrado: {sel}", C.V)
+                        log("Botão de envio encontrado.", C.V)
                         btn.click(force=True)
                         log("Botão clicado com sucesso.", C.V)
                         time.sleep(6)
@@ -284,37 +312,6 @@ class AVAAutomacao:
             self.fechar_modal()
 
         return False
-        log("Tentando resolver pergunta...", C.C)
-        time.sleep(3)
-
-        opcao = self.page.locator("input[type='radio'][value='correta']").first
-        if opcao.count() == 0:
-            opcao = self.page.locator("input[type='radio']").first
-
-        if opcao.count() > 0:
-            opcao.evaluate("el => el.click()")
-            time.sleep(1)
-            respondido = False
-            seletores_botao = ["#submit-poll", "button:has-text('Votar')", "button:has-text('Responder')", ".submitbutton"]
-
-            for sel in seletores_botao:
-                btn = self.page.locator(sel).first
-                if btn.count() > 0 and btn.is_visible():
-                    log(f"Botão de envio encontrado: {sel}", C.V)
-                    btn.click()
-                    respondido = True
-                    time.sleep(5)
-                    break
-            if respondido:
-                log("Pergunta respondida, fechando modal.", C.V)
-                self.fechar_modal()
-                return True
-            else:
-                log("Opção selecionada, mas botão de 'Responder' não foi encontrado.", C.A)
-                return False
-        else:
-            log("Nenhuma opção de resposta encontrada no modal.", C.E)
-            return False
 
     def resolver_diagnostico(self):
         log("Resolvendo diagnóstico...", C.M, "📝")
@@ -484,21 +481,50 @@ class AVAAutomacao:
         return True
 
     def detectar_tipo_modal(self):
-        try:
-            time.sleep(3)
-            texto = self.page.locator(".modal-content").inner_text().lower()
-        except:
-            texto = ""
-        if "diagnóstico da turma" in texto:
+        time.sleep(2)
+        btn_verificar = self.page.locator("button:has-text('Verifique a conclusão')").first
+        if btn_verificar.count() > 0:
+            try:
+                modal_text = self.page.locator(".modal-content").inner_text().lower()
+            except:
+                modal_text = ""
+            if "plano de aula" in modal_text or "sala de edição" in modal_text:
+                return "plano"
+            # Se tem iframe, checa se dentro dele existem perguntas (rádio)
+            if self.page.locator(".modal-content iframe").count() > 0:
+                iframe = self.page.frame_locator(".modal-content iframe").first
+                if iframe.locator("input[type='radio']").count() > 0:
+                    return "pergunta"
             return "diagnostico"
-        if "plano de aula" in texto or "sala de edição" in texto:
-            return "plano"
-        if "pesquisa" in texto or "satisfação" in texto:
+
+        # 1. Pesquisa
+        if self.page.locator("textarea[name='field-1768584459']").count() > 0:
             return "pesquisa"
-        if "reflexão" in texto:
-            return "reflexao"
+
+        # 2. Diagnóstico via iframe com link "Adicionar envio"
+        if self.page.locator(".modal-content iframe").count() > 0:
+            iframe = self.page.frame_locator(".modal-content iframe").first
+            if iframe.locator("a:has-text('Adicionar envio'), a:has-text('Responder')").count() > 0:
+                return "diagnostico"
+        if self.page.locator("a:has-text('Adicionar envio'), a:has-text('Responder')").count() > 0:
+            return "diagnostico"
+
+        # 3. Plano de aula
+        try:
+            modal_text = self.page.locator(".modal-content").inner_text().lower()
+        except:
+            modal_text = ""
+        if "plano de aula" in modal_text or "sala de edição" in modal_text:
+            return "plano"
+
+        # 4. Pergunta
         if self.page.locator(".modal-content input[type='radio']").count() > 0:
             return "pergunta"
+
+        # 5. Reflexão
+        if "reflexão" in modal_text:
+            return "reflexao"
+
         return "popup"
 
     def handle_modal(self):
@@ -546,7 +572,7 @@ class AVAAutomacao:
         # Falha: incrementa contador
         self.stuck_fail_count += 1
 
-        if self.stuck_fail_count >= 4:
+        if self.stuck_fail_count >= 1:
             # Troca de estratégia
             self.stuck_strategy_idx = (self.stuck_strategy_idx + 1) % len(ESTRATEGIAS)
             self.stuck_fail_count = 0
