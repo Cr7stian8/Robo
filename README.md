@@ -1,63 +1,120 @@
-🤖 Automação AVA-EFAPE com Playwright
-Automatiza o acesso e a interação com a plataforma AVA-EFAPE: login, navegação entre cursos, execução de aulas/vídeos e resolução de modais (perguntas, diagnósticos, pesquisas, etc.).
+# 🤖 Automação AVA-EFAPE com Playwright
 
-📦 Pré-requisitos
-Python 3.7 ou superior
+Automatiza o acesso e a interação com a plataforma AVA-EFAPE, incluindo:
 
-pip (gerenciador de pacotes do Python)
+- Login automático
+- Navegação entre cursos
+- Execução de aulas e vídeos
+- Resolução de modais (perguntas, diagnósticos, pesquisas etc.)
 
-Git (opcional, para clonar o repositório)
+---
 
-🐍 Ambiente virtual (recomendado)
-Isolar as dependências evita conflitos com outros projetos.
+## 📦 Pré-requisitos
 
-Linux / macOS
-bash
+Antes de começar, certifique-se de ter instalado:
+
+- Python 3.7 ou superior
+- Pip (gerenciador de pacotes do Python)
+- Git (opcional, para clonar o repositório)
+
+---
+
+## 🐍 Ambiente Virtual (Recomendado)
+
+Utilizar um ambiente virtual ajuda a evitar conflitos de dependências com outros projetos.
+
+### Linux / macOS
+
+```bash
 # Cria o ambiente virtual (pasta "venv")
 python3 -m venv venv
 
 # Ativa o ambiente
 source venv/bin/activate
-Windows (CMD/PowerShell)
-cmd
+```
+
+### Windows (CMD ou PowerShell)
+
+```cmd
 python -m venv venv
 venv\Scripts\activate
-Após a ativação, o terminal mostrará (venv) no início da linha – isso confirma que o ambiente está ativo.
+```
 
-⚙️ Instalação
-Clone ou baixe o projeto
+Após a ativação, o terminal exibirá `(venv)` no início da linha, indicando que o ambiente virtual está ativo.
 
-bash
+---
+
+## ⚙️ Instalação
+
+### 1. Clone ou baixe o projeto
+
+```bash
 git clone <url-do-repositorio>
 cd nome-da-pasta
-Instale as dependências (com o ambiente virtual ativo)
+```
 
-bash
+### 2. Instale as dependências
+
+Com o ambiente virtual ativo:
+
+```bash
 pip install playwright
-Instale os navegadores do Playwright
+```
 
-bash
+### 3. Instale os navegadores do Playwright
+
+```bash
 playwright install
-▶️ Como executar
+```
+
+---
+
+## ▶️ Como Executar
+
 Com o ambiente virtual ativo, execute o script principal:
 
-bash
+```bash
 python nome_do_arquivo.py
-Substitua nome_do_arquivo.py pelo nome real do seu arquivo.
-Se estiver no Linux sem o ambiente virtual, use python3.
+```
 
-📊 Logs
-Durante a execução, o terminal exibe mensagens coloridas:
+Substitua `nome_do_arquivo.py` pelo nome real do arquivo.
 
-✅ Sucesso
+No Linux, caso não esteja utilizando ambiente virtual, utilize:
 
-❌ Erro
+```bash
+python3 nome_do_arquivo.py
+```
 
-⚠️ Aviso
+---
 
-📚 Progresso
+## 📊 Logs
 
-📌 Observações
-As credenciais de acesso devem estar configuradas corretamente no código.
+Durante a execução, o terminal exibe mensagens de status:
 
-O Playwright pode rodar em modo headless (sem interface gráfica) dependendo da configuração do script.
+| Símbolo | Significado |
+|----------|-------------|
+| ✅ | Sucesso |
+| ❌ | Erro |
+| ⚠️ | Aviso |
+| 📚 | Progresso |
+
+---
+
+## 📌 Observações
+
+- As credenciais de acesso devem estar configuradas corretamente no código.
+- O Playwright pode ser executado em modo **headless** (sem interface gráfica), dependendo da configuração do script.
+- Recomenda-se manter as dependências atualizadas para garantir compatibilidade com a plataforma.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- Python
+- Playwright
+
+---
+
+## 📄 Licença
+
+Este projeto é disponibilizado para fins educacionais e de automação. Verifique as políticas de uso da plataforma antes de utilizá-lo.
