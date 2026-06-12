@@ -1,71 +1,22 @@
 # 🤖 Automação AVA-EFAPE com Playwright
 
-Este projeto automatiza o acesso e a interação com a plataforma AVA-EFAPE:
-
-* Login automático
-* Navegação entre cursos
-* Execução de aulas/vídeos
-* Resolução de modais (perguntas, diagnósticos, pesquisas, etc.)
+Automatiza o acesso e a interação com a plataforma AVA-EFAPE: login, navegação entre cursos, execução de aulas/vídeos e resolução de modais (perguntas, diagnósticos, pesquisas, etc.).
 
 ## 📦 Pré-requisitos
 
-Antes de rodar o projeto, você precisa ter instalado:
+- Python 3.7 ou superior
+- pip (gerenciador de pacotes do Python)
+- Git (opcional, para clonar o repositório)
 
-* Python
-* `pip` (gerenciador de pacotes do Python)
+## 🐍 Ambiente virtual (recomendado)
 
-## ⚙️ Instalação
+Isolar as dependências evita conflitos com outros projetos.
 
-### 1. Clone ou baixe o projeto
-
-```bash
-git clone <seu-repositorio>
-cd <pasta-do-projeto>
-```
-
-### 2. Instale as dependências
+### Linux / macOS
 
 ```bash
-pip install playwright
-```
+# Cria o ambiente virtual (pasta "venv")
+python3 -m venv venv
 
-### 3. Instale os navegadores do Playwright
-
-```bash
-playwright install
-```
-
-## ▶️ Como rodar
-
-### 🪟 Windows
-
-No Prompt de Comando (CMD) ou PowerShell:
-
-```bash
-python nome_do_arquivo.py
-```
-
-Se tiver múltiplas versões do Python:
-
-```bash
-python3 nome_do_arquivo.py
-```
-
----
-
-### 🐧 Linux
-
-No terminal:
-
-```bash
-python3 nome_do_arquivo.py
-```
-
-## 📊 Logs
-
-O sistema exibe logs coloridos no terminal:
-
-* ✅ Sucesso
-* ❌ Erro
-* ⚠️ Aviso
-* 📚 Progresso
+# Ativa o ambiente
+source venv/bin/activate
