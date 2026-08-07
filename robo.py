@@ -1,6 +1,6 @@
 """
 Automação AVA-EFAPE – Robô para assistir vídeos, responder atividades e concluir cursos.
-Corrigido e pronto para uso.
+Corrigido e atualizado para novo formato de perguntas (option-btn).
 """
 
 import os
@@ -212,7 +212,7 @@ class AVAAutomacao:
             return False
 
     # -------------------------------------------------------------------------
-    # ENCONTRAR PRÓXIMA AULA (MÉTODO QUE FALTAVA)
+    # ENCONTRAR PRÓXIMA AULA
     # -------------------------------------------------------------------------
     def encontrar_proxima_aula_pendente(self):
         """Localiza a próxima aula não concluída dentro do curso atual."""
@@ -293,6 +293,11 @@ class AVAAutomacao:
     # -------------------------------------------------------------------------
     def detectar_tipo_modal(self) -> str:
         time.sleep(1)
+
+        # NOVO: pergunta com botões option-btn
+        if self.page.locator(".modal-content .option-btn").first.count() > 0:
+            return "pergunta"
+
         btn_verificar = self.page.locator("button:has-text('Verifique a conclusão')").first
         if btn_verificar.count() > 0:
             modal_text = ""
@@ -364,6 +369,29 @@ class AVAAutomacao:
     def resolver_pergunta(self) -> bool:
         log("Tentando resolver pergunta...", C.C)
         time.sleep(1)
+
+        # Novo formato: botões com classe option-btn
+        opcoes = self.page.locator(".modal-content .option-btn")
+        if opcoes.count() > 0:
+            # Escolhe a primeira opção disponível (para acertar, poderia escolher aleatória ou por valor)
+            opcoes.first.evaluate("el => el.click()")
+            time.sleep(0.5)
+
+            # Aguarda o botão de submit aparecer (ele fica visível após selecionar)
+            submit = self.page.locator("#submitBtn")
+            try:
+                submit.wait_for(state="visible", timeout=3000)
+            except Exception:
+                pass
+
+            if submit.is_visible():
+                submit.evaluate("el => el.click()")
+                time.sleep(2)
+
+            self.fechar_modal()
+            return True
+
+        # Fallback: formato antigo com iframe
         if self.page.locator(".modal-content iframe").count() > 0:
             iframe = self.page.frame_locator(".modal-content iframe").first
             opcao = iframe.locator("input[type='radio'][value='correta']").first
@@ -382,6 +410,7 @@ class AVAAutomacao:
                 self.fechar_modal()
                 return False
 
+        # Fallback: radio buttons direto no DOM (formato antigo)
         try:
             opcao = self.page.locator("input[type='radio'][value='correta']").first
             if opcao.count() == 0:
